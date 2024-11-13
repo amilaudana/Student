@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Module/etc/menu.xsd">
+    <menu>
+         <add id="CodeAesthetix_Student::students" title="Students" module="CodeAesthetix_Student" parent="CodeAesthetix_SimpleCrud::menu" sortOrder="1" resource="CodeAesthetix_Student::students" action="student/student/index"/>
+    </menu>
+</config>

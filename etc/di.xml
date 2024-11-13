@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <type name="CodeAesthetix\Student\Api\StudentRepositoryInterface">
+        <arguments>
+            <argument name="studentFactory" xsi:type="object">CodeAesthetix\Student\Model\StudentFactory</argument>
+        </arguments>
+    </type>
+
+    <preference for="CodeAesthetix\Student\Api\StudentRepositoryInterface" type="CodeAesthetix\Student\Model\StudentRepository"/>
+
+    <type name="CodeAesthetix\Student\Model\Student\DataProvider">
+        <arguments>
+            <argument name="collectionFactory" xsi:type="object">CodeAesthetix\Student\Model\ResourceModel\Student\CollectionFactory</argument>
+        </arguments>
+    </type>
+
+    <virtualType name="CodeAesthetix\Student\Model\ResourceModel\Student\Grid\Collection" type="Magento\Framework\View\Element\UiComponent\DataProvider\SearchResult">
+        <arguments>
+            <argument name="mainTable" xsi:type="string">student_entity</argument>
+            <argument name="resourceModel" xsi:type="string">CodeAesthetix\Student\Model\ResourceModel\Student\Collection</argument>
+        </arguments>
+    </virtualType>
+
+    <type name="Magento\Framework\View\Element\UiComponent\DataProvider\CollectionFactory">
+        <arguments>
+            <argument name="collections" xsi:type="array">
+                <item name="student_data_source" xsi:type="string">CodeAesthetix\Student\Model\ResourceModel\Student\Grid\Collection</item>
+            </argument>
+        </arguments>
+    </type> 
+
+    <type name="Magento\Framework\View\Element\UiComponent\DataProvider\DataProvider">
+        <plugin name="mask_license_plugin" type="CodeAesthetix\SimpleCrud\Plugin\MaskLicensePlugin" />
+    </type>
+
+</config>
