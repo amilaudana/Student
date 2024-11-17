@@ -9,8 +9,9 @@ use Magento\Backend\App\Action\Context;
 use CodeAesthetix\Student\Api\StudentRepositoryInterface as StudentRepository;
 use Magento\Framework\Controller\Result\JsonFactory;
 use CodeAesthetix\Student\Api\Data\StudentInterface;
+use Magento\Framework\App\Action\HttpPostActionInterface;
 
-class InlineEdit extends \Magento\Backend\App\Action
+class InlineEdit extends \Magento\Backend\App\Action implements HttpPostActionInterface
 {
     /**
      * Authorization level of a basic admin session
@@ -45,6 +46,8 @@ class InlineEdit extends \Magento\Backend\App\Action
     }
 
     /**
+     * Execute action for inline editing
+     *
      * @return \Magento\Framework\Controller\ResultInterface
      * @throws \Magento\Framework\Exception\LocalizedException
      */
@@ -55,6 +58,7 @@ class InlineEdit extends \Magento\Backend\App\Action
         $error = false;
         $messages = [];
 
+        // Verify if the request is an AJAX request
         if ($this->getRequest()->getParam('isAjax')) {
             $postItems = $this->getRequest()->getParam('items', []);
             if (!count($postItems)) {
@@ -62,16 +66,16 @@ class InlineEdit extends \Magento\Backend\App\Action
                 $error = true;
             } else {
                 foreach (array_keys($postItems) as $studentId) {
-                    /** @var \CodeAesthetix\Student\Model\Student $student */
-                    $student = $this->studentRepository->getById($studentId);
                     try {
-                        $student->setData(array_merge($student->getData(), $postItems[$studentId]));
-                        $this->studentRepository->save($student);
+                        // Load student entity by ID
+                        $studentEntity = $this->studentRepository->getById($studentId);
+
+                        $studentEntity->setData(array_merge($studentEntity->getData(), $postItems[$studentId]));
+
+                        // Save the updated student entity
+                        $this->studentRepository->save($studentEntity);
                     } catch (\Exception $e) {
-                        $messages[] = $this->getErrorWithStudentId(
-                            $student,
-                            __($e->getMessage())
-                        );
+                        $messages[] = $this->getErrorWithStudentId($studentId, $e->getMessage());
                         $error = true;
                     }
                 }
@@ -87,12 +91,12 @@ class InlineEdit extends \Magento\Backend\App\Action
     /**
      * Add student ID to error message
      *
-     * @param StudentInterface $student
+     * @param int $studentId
      * @param string $errorText
      * @return string
      */
-    protected function getErrorWithStudentId(StudentInterface $student, $errorText)
+    protected function getErrorWithStudentId($studentId, $errorText)
     {
-        return '[Student ID: ' . $student->getId() . '] ' . $errorText;
+        return '[Student ID: ' . $studentId . '] ' . $errorText;
     }
 }

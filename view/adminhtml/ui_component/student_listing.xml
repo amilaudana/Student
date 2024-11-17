@@ -1,14 +1,16 @@
-<?xml version="1.0"?>
-<listing xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Ui/etc/ui_configuration.xsd">
-
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+/**
+ * Copyright © Magento, Inc. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+-->
+<listing xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Ui:etc/ui_configuration.xsd">
     <argument name="data" xsi:type="array">
         <item name="js_config" xsi:type="array">
-            <item name="provider" xsi:type="string">student_listing.student_data_source</item>
-            <item name="deps" xsi:type="string">student_listing.student_data_source</item>
+            <item name="provider" xsi:type="string">student_listing.student_listing_data_source</item>
         </item>
-        <item name="spinner" xsi:type="string">student_columns</item>
     </argument>
-
     <settings>
         <buttons>
             <button name="add">
@@ -19,29 +21,24 @@
         </buttons>
         <spinner>student_columns</spinner>
         <deps>
-            <dep>student_listing.student_data_source</dep>
+            <dep>student_listing.student_listing_data_source</dep>
         </deps>
     </settings>
-
-    <dataSource name="student_data_source">
-        <argument name="dataProvider" xsi:type="configurableObject">
-            <argument name="class" xsi:type="string">CodeAesthetix\Student\Ui\Component\DataProvider</argument>
-            <argument name="name" xsi:type="string">student_data_source</argument>
-            <argument name="primaryFieldName" xsi:type="string">student_id</argument>
-            <argument name="requestFieldName" xsi:type="string">student_id</argument>
-            <argument name="data" xsi:type="array">
-                <item name="config" xsi:type="array">
-                    <item name="component" xsi:type="string">Magento_Ui/js/grid/provider</item>
-                    <item name="update_url" xsi:type="url" path="mui/index/render"/>
-                    <item name="storageConfig" xsi:type="array">
-                        <item name="indexField" xsi:type="string">entity_id</item>
-                    </item>
-                </item>
-            </argument>
-        </argument>
-        <argument name="spinner" xsi:type="string">student_columns</argument>
+    <dataSource name="student_listing_data_source" component="Magento_Ui/js/grid/provider">
+        <settings>
+            <storageConfig>
+                <param name="indexField" xsi:type="string">student_id</param>
+            </storageConfig>
+            <updateUrl path="mui/index/render"/>
+        </settings>
+        <aclResource>CodeAesthetix_Student::student</aclResource>
+        <dataProvider class="CodeAesthetix\Student\Ui\Component\DataProvider" name="student_listing_data_source">
+            <settings>
+                <requestFieldName>student_id</requestFieldName>
+                <primaryFieldName>student_id</primaryFieldName>
+            </settings>
+        </dataProvider>
     </dataSource>
-
     <listingToolbar name="listing_top">
         <settings>
             <sticky>true</sticky>
@@ -60,17 +57,6 @@
                     </filters>
                 </templates>
             </settings>
-            <filterSelect name="store_id" provider="${ $.parentName }">
-                <settings>
-                    <captionValue>0</captionValue>
-                    <options class="CodeAesthetix\AnyCms\Ui\Component\Listing\Column\Cms\Options"/>
-                    <label translate="true">Store View</label>
-                    <dataScope>store_id</dataScope>
-                    <imports>
-                        <link name="visible">ns = ${ $.ns }, index = ${ $.index }:visible</link>
-                    </imports>
-                </settings>
-            </filterSelect>
         </filters>
         <massaction name="listing_massaction">
             <action name="delete">
@@ -97,7 +83,6 @@
         </massaction>
         <paging name="listing_paging"/>
     </listingToolbar>
-
     <columns name="student_columns">
         <settings>
             <editorConfig>
@@ -125,39 +110,62 @@
                 <indexField>student_id</indexField>
             </settings>
         </selectionsColumn>
-        <column name="student_id" class="Magento\Ui\Component\Listing\Columns\Column">
+        <column name="student_id">
             <settings>
-                <filter>text</filter>
-                <label>Student ID</label>
+                <filter>textRange</filter>
+                <label translate="true">Student ID</label>
+                <sorting>asc</sorting>
             </settings>
         </column>
-        <column name="first_name" class="Magento\Ui\Component\Listing\Columns\Column">
+        <column name="first_name">
             <settings>
                 <filter>text</filter>
-                <label>First Name</label>
+                <editor>
+                    <validation>
+                        <rule name="required-entry" xsi:type="boolean">true</rule>
+                    </validation>
+                    <editorType>text</editorType>
+                </editor>
+                <label translate="true">First Name</label>
             </settings>
         </column>
-        <column name="last_name" class="Magento\Ui\Component\Listing\Columns\Column">
+        <column name="last_name">
             <settings>
                 <filter>text</filter>
-                <label>Last Name</label>
+                <editor>
+                    <validation>
+                        <rule name="required-entry" xsi:type="boolean">true</rule>
+                    </validation>
+                    <editorType>text</editorType>
+                </editor>
+                <label translate="true">Last Name</label>
             </settings>
         </column>
-        <column name="age" class="Magento\Ui\Component\Listing\Columns\Column">
+        <column name="age">
             <settings>
                 <filter>number</filter>
-                <label>Age</label>
+                <label translate="true">Age</label>
             </settings>
         </column>
-        <column name="created_at" class="Magento\Ui\Component\Listing\Columns\Column">
+        <column name="created_at" class="Magento\Ui\Component\Listing\Columns\Date" component="Magento_Ui/js/grid/columns/date">
             <settings>
                 <filter>dateRange</filter>
-                <label>Created At</label>
+                <dataType>date</dataType>
+                <label translate="true">Created At</label>
+            </settings>
+        </column>
+        <column name="updated_at" class="Magento\Ui\Component\Listing\Columns\Date" component="Magento_Ui/js/grid/columns/date">
+            <settings>
+                <filter>dateRange</filter>
+                <dataType>date</dataType>
+                <label translate="true">Updated At</label>
             </settings>
         </column>
         <actionsColumn name="actions" class="CodeAesthetix\Student\Ui\Component\Listing\Column\Actions">
             <settings>
-                <indexField>block_id</indexField>
+                <indexField>student_id</indexField>
+                <resizeEnabled>false</resizeEnabled>
+                <resizeDefaultWidth>107</resizeDefaultWidth>
             </settings>
         </actionsColumn>
     </columns>
