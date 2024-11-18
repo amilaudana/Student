@@ -1,6 +1,7 @@
 <?php
 namespace CodeAesthetix\Student\Model\ResourceModel;
 
+use CodeAesthetix\Student\Api\Data\StudentInterface;
 use Magento\Framework\DB\Select;
 use Magento\Framework\EntityManager\EntityManager;
 use Magento\Framework\EntityManager\MetadataPool;
@@ -8,6 +9,7 @@ use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Model\AbstractModel;
 use Magento\Framework\Model\ResourceModel\Db\AbstractDb;
 use Magento\Framework\Model\ResourceModel\Db\Context;
+use Magento\Store\Model\Store;
 use Magento\Store\Model\StoreManagerInterface;
 
 /**
@@ -64,6 +66,14 @@ class Student extends AbstractDb
     }
 
     /**
+     * @inheritDoc
+     */
+    public function getConnection()
+    {
+        return $this->metadataPool->getMetadata(StudentInterface::class)->getEntityConnection();
+    }
+
+    /**
      * Perform operations before object save
      *
      * @param AbstractModel $object
@@ -74,6 +84,36 @@ class Student extends AbstractDb
     {
         // Add any pre-save validation logic if needed
         return $this;
+    }
+
+    /**
+     * Get student id.
+     *
+     * @param AbstractModel $object
+     * @param mixed $value
+     * @param string|null $field
+     * @return bool|int|string
+     * @throws LocalizedException
+     * @throws \Exception
+     */
+    private function getStudentId(AbstractModel $object, $value, $field = null)
+    {
+        $entityMetadata = $this->metadataPool->getMetadata(StudentInterface::class);
+        if (!is_numeric($value) && $field === null) {
+            $field = 'identifier';
+        } elseif (!$field) {
+            $field = $entityMetadata->getIdentifierField();
+        }
+        $entityId = $value;
+        if ($field != $entityMetadata->getIdentifierField() || $object->getStoreId()) {
+            $select = $this->_getLoadSelect($field, $value, $object);
+            $select->reset(Select::COLUMNS)
+                ->columns($this->getMainTable() . '.' . $entityMetadata->getIdentifierField())
+                ->limit(1);
+            $result = $this->getConnection()->fetchCol($select);
+            $entityId = count($result) ? $result[0] : false;
+        }
+        return $entityId;
     }
 
     /**
@@ -94,6 +134,63 @@ class Student extends AbstractDb
     }
 
     /**
+     * Retrieve select object for load object data
+     *
+     * @param string $field
+     * @param mixed $value
+     * @param AbstractModel $object
+     * @return Select
+     */
+    protected function _getLoadSelect($field, $value, $object)
+    {
+        $entityMetadata = $this->metadataPool->getMetadata(StudentInterface::class);
+        $linkField = $entityMetadata->getLinkField();
+
+        $select = parent::_getLoadSelect($field, $value, $object);
+
+        if ($object->getStoreId()) {
+            $stores = [(int)$object->getStoreId(), Store::DEFAULT_STORE_ID];
+
+            $select->join(
+                ['ss' => $this->getTable('student_entity_store')],
+                $this->getMainTable() . '.' . $linkField . ' = ss.' . $linkField,
+                ['store_id']
+            )
+                ->where('is_active = ?', 1)
+                ->where('ss.store_id in (?)', $stores)
+                ->order('store_id DESC')
+                ->limit(1);
+        }
+
+        return $select;
+    }
+
+    /**
+     * Get store ids to which specified item is assigned
+     *
+     * @param int $id
+     * @return array
+     */
+    public function lookupStoreIds($id)
+    {
+        $connection = $this->getConnection();
+
+        $entityMetadata = $this->metadataPool->getMetadata(StudentInterface::class);
+        $linkField = $entityMetadata->getLinkField();
+
+        $select = $connection->select()
+            ->from(['ss' => $this->getTable('student_entity_store')], 'store_id')
+            ->join(
+                ['se' => $this->getMainTable()],
+                'ss.' . $linkField . ' = se.' . $linkField,
+                []
+            )
+            ->where('se.' . $entityMetadata->getIdentifierField() . ' = :student_id');
+
+        return $connection->fetchCol($select, ['student_id' => (int)$id]);
+    }
+
+    /**
      * Save an object.
      *
      * @param AbstractModel $object
@@ -107,53 +204,11 @@ class Student extends AbstractDb
     }
 
     /**
-     * Delete an object.
-     *
-     * @param AbstractModel $object
-     * @return $this
-     * @throws \Exception
+     * @inheritDoc
      */
-    public function delete(AbstractModel $object)
-    {
-        // Ensure the student_id is set before calling entity manager delete
-        if (!$object->getId()) {
-            throw new \Exception('Cannot delete the student: student_id is missing.');
-        }
-
-        $this->entityManager->delete($object);
-        return $this;
-    }
-
-
-    /**
-     * Get student ID.
-     *
-     * @param AbstractModel $object
-     * @param mixed $value
-     * @param string|null $field
-     * @return bool|int|string
-     * @throws LocalizedException
-     * @throws \Exception
-     */
-    private function getStudentId(AbstractModel $object, $value, $field = null)
-    {
-        $entityMetadata = $this->metadataPool->getMetadata(\CodeAesthetix\Student\Api\Data\StudentInterface::class);
-        if (!is_numeric($value) && $field === null) {
-            $field = 'identifier';
-        } elseif (!$field) {
-            $field = $entityMetadata->getIdentifierField();
-        }
-        $entityId = $value;
-
-        if ($field != $entityMetadata->getIdentifierField() || $object->getStoreId()) {
-            $select = $this->_getLoadSelect($field, $value, $object);
-            $select->reset(Select::COLUMNS)
-                ->columns($this->getMainTable() . '.' . $entityMetadata->getIdentifierField())
-                ->limit(1);
-            $result = $this->getConnection()->fetchCol($select);
-            $entityId = count($result) ? $result[0] : false;
-        }
-
-        return $entityId;
-    }
+//    public function delete(AbstractModel $object)
+//    {
+//        $this->entityManager->delete($object);
+//        return $this;
+//    }
 }

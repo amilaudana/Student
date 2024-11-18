@@ -13,4 +13,21 @@
             <column name="student_id"/>
         </constraint>
     </table>
+
+    <table name="student_entity_store" resource="default" engine="innodb" comment="Student Entity To Store Linkage Table">
+        <column xsi:type="int" name="student_id" unsigned="true" nullable="false" identity="false"/>
+        <column xsi:type="smallint" name="store_id" unsigned="true" nullable="false" identity="false" comment="Store ID"/>
+        <constraint xsi:type="primary" referenceId="PRIMARY">
+            <column name="student_id"/>
+            <column name="store_id"/>
+        </constraint>
+        <constraint xsi:type="foreign" referenceId="STUDENT_ENTITY_STORE_STUDENT_ID_STUDENT_ENTITY_STUDENT_ID" table="student_entity_store"
+                    column="student_id" referenceTable="student_entity" referenceColumn="student_id" onDelete="CASCADE"/>
+        <constraint xsi:type="foreign" referenceId="STUDENT_ENTITY_STORE_STORE_ID_STORE_STORE_ID" table="student_entity_store"
+                    column="store_id" referenceTable="store" referenceColumn="store_id" onDelete="CASCADE"/>
+        <index referenceId="STUDENT_ENTITY_STORE_STORE_ID" indexType="btree">
+            <column name="store_id"/>
+        </index>
+    </table>
+
 </schema>

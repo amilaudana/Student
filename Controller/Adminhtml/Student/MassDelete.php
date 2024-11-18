@@ -72,8 +72,10 @@ class MassDelete extends \Magento\Backend\App\Action implements HttpPostActionIn
 
         foreach ($collection as $student) {
             try {
+ 
                 // Load student by ID before deleting to ensure it's fully loaded
                 $studentEntity = $this->studentRepository->getById($student->getId());
+
                 if ($studentEntity->getId()) {
                     $this->studentRepository->delete($studentEntity);
                 } else {

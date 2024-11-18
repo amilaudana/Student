@@ -7,7 +7,6 @@
     </type>
 
     <preference for="CodeAesthetix\Student\Api\StudentRepositoryInterface" type="CodeAesthetix\Student\Model\StudentRepository"/>
-    <preference for="CodeAesthetix\Student\Api\Data\StudentInterface" type="CodeAesthetix\Student\Model\Student" />
 
     <type name="CodeAesthetix\Student\Model\Student\DataProvider">
         <arguments>
@@ -18,7 +17,7 @@
     <virtualType name="CodeAesthetix\Student\Model\ResourceModel\Student\Grid\Collection" type="Magento\Framework\View\Element\UiComponent\DataProvider\SearchResult">
         <arguments>
             <argument name="mainTable" xsi:type="string">student_entity</argument>
-            <argument name="resourceModel" xsi:type="string">CodeAesthetix\Student\Model\ResourceModel\Student\Collection</argument>
+            <argument name="resourceModel" xsi:type="string">CodeAesthetix\Student\Model\ResourceModel\Student</argument>
         </arguments>
     </virtualType>
 
@@ -36,10 +35,16 @@
                 <item name="CodeAesthetix\Student\Api\Data\StudentInterface" xsi:type="array">
                     <item name="entityTableName" xsi:type="string">student_entity</item>
                     <item name="identifierField" xsi:type="string">student_id</item>
-                    <item name="primaryKey" xsi:type="string">student_id</item>
                     <item name="linkField" xsi:type="string">student_id</item>
                 </item>
             </argument>
+        </arguments>
+    </type>
+
+    <type name="CodeAesthetix\Student\Model\ResourceModel\AbstractCollection">
+        <arguments>
+            <argument name="metadataPool" xsi:type="object">Magento\Framework\EntityManager\MetadataPool</argument>
+            <argument name="storeManager" xsi:type="object">Magento\Store\Model\StoreManagerInterface</argument>
         </arguments>
     </type>
 

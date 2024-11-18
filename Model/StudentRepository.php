@@ -1,4 +1,5 @@
 <?php
+
 namespace CodeAesthetix\Student\Model;
 
 use CodeAesthetix\Student\Api\Data\StudentInterface;
@@ -21,54 +22,15 @@ use Psr\Log\LoggerInterface;
 
 class StudentRepository implements StudentRepositoryInterface
 {
-    /**
-     * @var StudentResource
-     */
     protected $resource;
-
-    /**
-     * @var StudentFactory
-     */
     protected $studentFactory;
-
-    /**
-     * @var StudentCollectionFactory
-     */
     protected $studentCollectionFactory;
-
-    /**
-     * @var DataObjectHelper
-     */
     protected $dataObjectHelper;
-
-    /**
-     * @var DataObjectProcessor
-     */
     protected $dataObjectProcessor;
-
-    /**
-     * @var StoreManagerInterface
-     */
     private $storeManager;
-
-    /**
-     * @var CollectionProcessorInterface
-     */
     private $collectionProcessor;
-
-    /**
-     * @var HydratorInterface
-     */
     private $hydrator;
-
-    /**
-     * @var SearchResultsInterfaceFactory
-     */
     private $searchResultsFactory;
-
-    /**
-     * @var LoggerInterface
-     */
     private $logger;
 
     public function __construct(
@@ -98,32 +60,18 @@ class StudentRepository implements StudentRepositoryInterface
     public function save(StudentInterface $student): StudentInterface
     {
         try {
-            // Set store ID if not set
             if (empty($student->getStoreId())) {
-                $student->setStoreId($this->storeManager->getStore()->getId());
+                $student->setStoreId([$this->storeManager->getStore()->getId()]);
             }
 
-            // Ensure the entity has the correct ID field before saving
-            if (!$student->getId() && $student->getStudentId()) {
-                $student->setId($student->getStudentId());
-            }
-
-            // Check if the student already exists and rehydrate if necessary
             if ($student->getId() && !$student->getOrigData()) {
-                // Get the existing student record
                 $existingStudent = $this->getById($student->getId());
-
-                // Rehydrate student model with existing data if found
-                if ($existingStudent->getId()) {
-                    $student = $this->hydrator->hydrate($existingStudent, $this->hydrator->extract($student));
-                }
+                $student = $this->hydrator->hydrate($existingStudent, $this->hydrator->extract($student));
             }
-
-            // Save student (insert or update)
             $this->resource->save($student);
 
+
         } catch (\Exception $e) {
-            // Log error and throw exception for the save operation failure
             throw new CouldNotSaveException(
                 __('Could not save the student: %1', $e->getMessage())
             );
@@ -164,7 +112,6 @@ class StudentRepository implements StudentRepositoryInterface
     public function getList(SearchCriteriaInterface $criteria)
     {
         $collection = $this->studentCollectionFactory->create();
-
         $this->collectionProcessor->process($criteria, $collection);
 
         $searchResults = $this->searchResultsFactory->create();
