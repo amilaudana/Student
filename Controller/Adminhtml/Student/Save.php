@@ -61,10 +61,6 @@ class Save extends Action implements HttpPostActionInterface
         $data = $this->getRequest()->getPostValue();
 
         if ($data) {
-            // Set default value for `is_active`
-            if (isset($data['is_active']) && $data['is_active'] === 'true') {
-                $data['is_active'] = 1;
-            }
             if (empty($data['student_id'])) {
                 $data['student_id'] = null;
             }
@@ -100,6 +96,7 @@ class Save extends Action implements HttpPostActionInterface
         }
         return $resultRedirect->setPath('*/*/');
     }
+
 
     /**
      * Process and set the student return
