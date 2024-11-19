@@ -14,7 +14,7 @@
     <settings>
         <buttons>
             <button name="add">
-                <url path="*/*/new"/>
+                <url path="student/student/new"/>
                 <class>primary</class>
                 <label translate="true">Add New Student</label>
             </button>
@@ -147,6 +147,15 @@
                 <label translate="true">Age</label>
             </settings>
         </column>
+        <column name="description">
+            <settings>
+                <filter>text</filter>
+                <editor>
+                    <editorType>text</editorType>
+                </editor>
+                <label translate="true">Description</label>
+            </settings>
+        </column>
         <column name="created_at" class="Magento\Ui\Component\Listing\Columns\Date" component="Magento_Ui/js/grid/columns/date">
             <settings>
                 <filter>dateRange</filter>
@@ -161,12 +170,12 @@
                 <label translate="true">Updated At</label>
             </settings>
         </column>
+
         <actionsColumn name="actions" class="CodeAesthetix\Student\Ui\Component\Listing\Column\Actions">
             <settings>
                 <indexField>student_id</indexField>
-                <resizeEnabled>false</resizeEnabled>
-                <resizeDefaultWidth>107</resizeDefaultWidth>
             </settings>
         </actionsColumn>
+
     </columns>
 </listing>
