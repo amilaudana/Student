@@ -9,6 +9,8 @@ interface StudentInterface
     const AGE = 'age';
     const DESCRIPTION = 'description';
     const CREATED_AT = 'created_at';
+    const IS_ACTIVE = 'is_active';
+    const STORE_ID = 'store_id';
 
     /**
      * Get Student ID
@@ -99,4 +101,35 @@ interface StudentInterface
      * @return $this
      */
     public function setCreatedAt($createdAt);
+
+    /**
+     * Get Age
+     *
+     * @return int
+     */
+    public function getIsActive();
+
+    /**
+     * Set Is Active
+     *
+     * @param int $isactive
+     * @return $this
+     */
+    public function setIsActive($isactive);
+
+    /**
+     * Get store IDs associated with the student.
+     *
+     * @return int[]
+     */
+    public function getStoreId();
+
+    /**
+     * Set store IDs associated with the student.
+     *
+     * @param int[] $storeIds
+     * @return $this
+     */
+    public function setStoreId(array $storeIds);
+
 }
