@@ -91,4 +91,14 @@ class Student extends AbstractExtensibleModel implements StudentInterface
     {
         return $this->setData(self::UPDATED_AT, $updatedAt);
     }
+
+    public function getStoreId()
+    {
+        return $this->getData(self::STORE_ID);
+    }
+
+    public function setStoreId($storeId)
+    {
+        return $this->setData(self::STORE_ID, $storeId);
+    }
 }

@@ -1,70 +1,94 @@
 <?php
+
 namespace CodeAesthetix\Student\Controller\Adminhtml\Student;
 
-use Magento\Backend\App\Action;
+use Magento\Framework\App\Action\HttpPostActionInterface;
+use Magento\Backend\App\Action\Context;
 use CodeAesthetix\Student\Api\StudentRepositoryInterface;
 use CodeAesthetix\Student\Model\StudentFactory;
-use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\App\Request\DataPersistorInterface;
-use Magento\Framework\App\ResourceConnection;
+use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\Controller\ResultInterface;
+use Magento\Backend\App\Action;
 
-class Save extends Action
+/**
+ * Save Student action.
+ */
+class Save extends Action implements HttpPostActionInterface
 {
-    protected $studentRepository;
-    protected $studentFactory;
+    /**
+     * @var DataPersistorInterface
+     */
     protected $dataPersistor;
-    protected $resource;
 
+    /**
+     * @var StudentFactory
+     */
+    private $studentFactory;
+
+    /**
+     * @var StudentRepositoryInterface
+     */
+    private $studentRepository;
+
+    /**
+     * @param Context $context
+     * @param DataPersistorInterface $dataPersistor
+     * @param StudentFactory $studentFactory
+     * @param StudentRepositoryInterface $studentRepository
+     */
     public function __construct(
-        Action\Context $context,
-        StudentRepositoryInterface $studentRepository,
-        StudentFactory $studentFactory,
+        Context $context,
         DataPersistorInterface $dataPersistor,
-        ResourceConnection $resource
+        StudentFactory $studentFactory,
+        StudentRepositoryInterface $studentRepository
     ) {
         parent::__construct($context);
-        $this->studentRepository = $studentRepository;
-        $this->studentFactory = $studentFactory;
         $this->dataPersistor = $dataPersistor;
-        $this->resource = $resource;
+        $this->studentFactory = $studentFactory;
+        $this->studentRepository = $studentRepository;
     }
 
+    /**
+     * Save action
+     *
+     * @return ResultInterface
+     */
     public function execute()
     {
+        /** @var \Magento\Backend\Model\View\Result\Redirect $resultRedirect */
         $resultRedirect = $this->resultRedirectFactory->create();
         $data = $this->getRequest()->getPostValue();
 
         if ($data) {
+            // Set default value for `is_active`
+            if (isset($data['is_active']) && $data['is_active'] === 'true') {
+                $data['is_active'] = 1;
+            }
+            if (empty($data['student_id'])) {
+                $data['student_id'] = null;
+            }
+
+            /** @var \CodeAesthetix\Student\Model\Student $student */
+            $student = $this->studentFactory->create();
+
+            $id = $this->getRequest()->getParam('student_id');
+            if ($id) {
+                try {
+                    $student = $this->studentRepository->getById($id);
+                } catch (LocalizedException $e) {
+                    $this->messageManager->addErrorMessage(__('This student no longer exists.'));
+                    return $resultRedirect->setPath('*/*/');
+                }
+            }
+
+            $student->setData($data);
+
             try {
-                $data['is_active'] = isset($data['is_active'])
-                    ? (int)filter_var($data['is_active'], FILTER_VALIDATE_BOOLEAN)
-                    : 0;
-
-                if (isset($data['store_id']) && !is_array($data['store_id'])) {
-                    $data['store_id'] = explode(',', $data['store_id']);
-                }
-
-                $studentId = $data['student_id'] ?? null;
-                $student = $studentId
-                    ? $this->studentRepository->getById($studentId)
-                    : $this->studentFactory->create();
-
-                $student->setData($data);
                 $this->studentRepository->save($student);
-
-                // Save the store associations manually
-                if (isset($data['store_id'])) {
-                    $this->_saveStoreAssociations($student->getId(), $data['store_id']);
-                }
-
-                $this->messageManager->addSuccessMessage(__('The student has been saved.'));
+                $this->messageManager->addSuccessMessage(__('You saved the student.'));
                 $this->dataPersistor->clear('student');
-
-                if (isset($data['back']) && $data['back'] === 'edit') {
-                    return $resultRedirect->setPath('*/*/edit', ['student_id' => $student->getId()]);
-                }
-
-                return $resultRedirect->setPath('*/*/');
+                return $this->processStudentReturn($student, $data, $resultRedirect);
             } catch (LocalizedException $e) {
                 $this->messageManager->addErrorMessage($e->getMessage());
             } catch (\Exception $e) {
@@ -72,26 +96,39 @@ class Save extends Action
             }
 
             $this->dataPersistor->set('student', $data);
-
-            if (isset($studentId)) {
-                return $resultRedirect->setPath('*/*/edit', ['student_id' => $studentId]);
-            }
+            return $resultRedirect->setPath('*/*/edit', ['student_id' => $id]);
         }
-
         return $resultRedirect->setPath('*/*/');
     }
 
-    protected function _saveStoreAssociations($studentId, array $storeIds)
+    /**
+     * Process and set the student return
+     *
+     * @param \CodeAesthetix\Student\Model\Student $student
+     * @param array $data
+     * @param ResultInterface $resultRedirect
+     * @return ResultInterface
+     */
+    private function processStudentReturn($student, $data, $resultRedirect)
     {
-        $connection = $this->resource->getConnection();
-        $tableName = $this->resource->getTableName('student_entity_store');
+        $redirect = $data['back'] ?? 'close';
 
-        // Insert new associations without deleting previous records
-        foreach ($storeIds as $storeId) {
-            $connection->insertOnDuplicate(
-                $tableName,
-                ['student_id' => (int)$studentId, 'store_id' => (int)$storeId]
-            );
+        if ($redirect === 'continue') {
+            $resultRedirect->setPath('*/*/edit', ['student_id' => $student->getId()]);
+        } elseif ($redirect === 'close') {
+            $resultRedirect->setPath('*/*/');
+        } elseif ($redirect === 'duplicate') {
+            $duplicateStudent = $this->studentFactory->create(['data' => $data]);
+            $duplicateStudent->setId(null);
+            $duplicateStudent->setIdentifier($data['identifier'] . '-' . uniqid());
+            $duplicateStudent->setIsActive(0);
+            $this->studentRepository->save($duplicateStudent);
+            $id = $duplicateStudent->getId();
+            $this->messageManager->addSuccessMessage(__('You duplicated the student.'));
+            $this->dataPersistor->set('student', $data);
+            $resultRedirect->setPath('*/*/edit', ['student_id' => $id]);
         }
+
+        return $resultRedirect;
     }
 }

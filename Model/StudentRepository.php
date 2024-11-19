@@ -57,30 +57,21 @@ class StudentRepository implements StudentRepositoryInterface
         $this->hydrator = $hydrator ?? ObjectManager::getInstance()->get(HydratorInterface::class);
     }
 
-    public function save(StudentInterface $student, $saveStoreAssociations = true): StudentInterface
+    public function save(StudentInterface $student): StudentInterface
     {
-        try {
-            if (empty($student->getStoreId())) {
-                $student->setStoreId([$this->storeManager->getStore()->getId()]);
-            }
-
-            if ($student->getId() && !$student->getOrigData()) {
-                $existingStudent = $this->getById($student->getId());
-                $student = $this->hydrator->hydrate($existingStudent, $this->hydrator->extract($student));
-            }
-
-            $this->resource->save($student);
-
-            if ($saveStoreAssociations) {
-                $this->saveStoreAssociations($student);
-            }
-
-        } catch (\Exception $e) {
-            throw new CouldNotSaveException(
-                __('Could not save the student: %1', $e->getMessage())
-            );
+        if (empty($student->getStoreId())) {
+            $student->setStoreId([$this->storeManager->getStore()->getId()]);
         }
 
+        if ($student->getId() && $student instanceof Student && !$student->getOrigData()) {
+            $student = $this->hydrator->hydrate($this->getById($student->getId()), $this->hydrator->extract($student));
+        }
+
+        try {
+            $this->resource->save($student);
+        } catch (\Exception $exception) {
+            throw new CouldNotSaveException(__($exception->getMessage()));
+        }
         return $student;
     }
 
