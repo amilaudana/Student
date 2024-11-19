@@ -124,18 +124,6 @@
                 <dataScope>age</dataScope>
             </settings>
         </field>
-        <field name="description" formElement="input">
-            <argument name="data" xsi:type="array">
-                <item name="config" xsi:type="array">
-                    <item name="source" xsi:type="string">student</item>
-                </item>
-            </argument>
-            <settings>
-                <dataType>text</dataType>
-                <label translate="true">Description</label>
-                <dataScope>description</dataScope>
-            </settings>
-        </field>
         <field name="storeviews" formElement="multiselect" class="Magento\Store\Ui\Component\Form\Field\StoreView">
             <argument name="data" xsi:type="array">
                 <item name="config" xsi:type="array">

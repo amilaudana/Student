@@ -7,65 +7,27 @@ use Magento\Framework\View\Result\PageFactory;
 use Magento\Framework\Registry;
 use CodeAesthetix\Student\Model\StudentFactory;
 
-/**
- * Edit Student action.
- */
-class Edit extends Action implements HttpGetActionInterface
+class Edit extends \CodeAesthetix\Student\Controller\Adminhtml\Student implements HttpGetActionInterface
 {
-    /**
-     * @var PageFactory
-     */
     protected $resultPageFactory;
-
-    /**
-     * Core registry
-     *
-     * @var Registry
-     */
-    protected $_coreRegistry;
-
-    /**
-     * @var StudentFactory
-     */
     protected $studentFactory;
 
     public function __construct(
         Action\Context $context,
         PageFactory $resultPageFactory,
-        Registry $registry,
+        Registry $coreRegistry,
         StudentFactory $studentFactory
     ) {
         $this->resultPageFactory = $resultPageFactory;
-        $this->_coreRegistry = $registry;
+        $this->_coreRegistry = $coreRegistry;
         $this->studentFactory = $studentFactory;
-        parent::__construct($context);
+        parent::__construct($context, $coreRegistry);
     }
 
-    /**
-     * Init actions
-     *
-     * @return \Magento\Backend\Model\View\Result\Page
-     */
-    protected function _initAction()
-    {
-        // Load layout, set active menu, and breadcrumbs
-        /** @var \Magento\Backend\Model\View\Result\Page $resultPage */
-        $resultPage = $this->resultPageFactory->create();
-        $resultPage->setActiveMenu('CodeAesthetix_Student::student')
-            ->addBreadcrumb(__('Student'), __('Student'))
-            ->addBreadcrumb(__('Manage Students'), __('Manage Students'));
-        return $resultPage;
-    }
-
-    /**
-     * Edit Student
-     *
-     * @return \Magento\Framework\Controller\ResultInterface
-     */
     public function execute()
     {
         $id = $this->getRequest()->getParam('student_id');
-        $model = $this->_objectManager->create(\CodeAesthetix\Student\Model\Student::class);
+        $model = $this->studentFactory->create();
 
         if ($id) {
             $model->load($id);
@@ -78,19 +40,19 @@ class Edit extends Action implements HttpGetActionInterface
 
         $this->_coreRegistry->register('student', $model);
 
-        $resultPage = $this->_initAction();
+        $resultPage = $this->resultPageFactory->create();
+        $this->initPage($resultPage)->addBreadcrumb(
+            $id ? __('Edit Student') : __('New Student'),
+            $id ? __('Edit Student') : __('New Student')
+        );
         $resultPage->getConfig()->getTitle()->prepend(__('Students'));
-        $resultPage->getConfig()->getTitle()->prepend($model->getId() ? $model->getFirstName() . ' ' . $model->getLastName() : __('New Student'));
+        $resultPage->getConfig()->getTitle()->prepend(
+            $model->getId() ? $model->getFirstName() . ' ' . $model->getLastName() : __('New Student')
+        );
 
         return $resultPage;
     }
 
-
-    /**
-     * Check if the user has permission to access this controller
-     *
-     * @return bool
-     */
     protected function _isAllowed()
     {
         return $this->_authorization->isAllowed('CodeAesthetix_Student::student');

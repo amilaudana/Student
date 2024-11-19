@@ -6,28 +6,29 @@ use CodeAesthetix\Student\Api\StudentRepositoryInterface;
 use CodeAesthetix\Student\Model\StudentFactory;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\App\Request\DataPersistorInterface;
+use Magento\Framework\App\ResourceConnection;
 
 class Save extends Action
 {
     protected $studentRepository;
     protected $studentFactory;
     protected $dataPersistor;
+    protected $resource;
 
     public function __construct(
         Action\Context $context,
         StudentRepositoryInterface $studentRepository,
         StudentFactory $studentFactory,
-        DataPersistorInterface $dataPersistor
+        DataPersistorInterface $dataPersistor,
+        ResourceConnection $resource
     ) {
         parent::__construct($context);
         $this->studentRepository = $studentRepository;
         $this->studentFactory = $studentFactory;
         $this->dataPersistor = $dataPersistor;
+        $this->resource = $resource;
     }
 
-    /**
-     * Execute the save action.
-     */
     public function execute()
     {
         $resultRedirect = $this->resultRedirectFactory->create();
@@ -35,32 +36,30 @@ class Save extends Action
 
         if ($data) {
             try {
-                // Normalize `is_active` field
                 $data['is_active'] = isset($data['is_active'])
                     ? (int)filter_var($data['is_active'], FILTER_VALIDATE_BOOLEAN)
                     : 0;
 
-                // Normalize store IDs if present
                 if (isset($data['store_id']) && !is_array($data['store_id'])) {
                     $data['store_id'] = explode(',', $data['store_id']);
                 }
 
-                // Load existing student or create a new one
                 $studentId = $data['student_id'] ?? null;
                 $student = $studentId
                     ? $this->studentRepository->getById($studentId)
                     : $this->studentFactory->create();
 
                 $student->setData($data);
-
-                // Save the student
                 $this->studentRepository->save($student);
 
-                // Success message and clear persisted data
+                // Save the store associations manually
+                if (isset($data['store_id'])) {
+                    $this->_saveStoreAssociations($student->getId(), $data['store_id']);
+                }
+
                 $this->messageManager->addSuccessMessage(__('The student has been saved.'));
                 $this->dataPersistor->clear('student');
 
-                // Redirect based on the 'back' parameter
                 if (isset($data['back']) && $data['back'] === 'edit') {
                     return $resultRedirect->setPath('*/*/edit', ['student_id' => $student->getId()]);
                 }
@@ -72,15 +71,27 @@ class Save extends Action
                 $this->messageManager->addExceptionMessage($e, __('Something went wrong while saving the student.'));
             }
 
-            // Persist data in case of error
             $this->dataPersistor->set('student', $data);
 
-            // Redirect to edit if an error occurred
             if (isset($studentId)) {
                 return $resultRedirect->setPath('*/*/edit', ['student_id' => $studentId]);
             }
         }
 
         return $resultRedirect->setPath('*/*/');
+    }
+
+    protected function _saveStoreAssociations($studentId, array $storeIds)
+    {
+        $connection = $this->resource->getConnection();
+        $tableName = $this->resource->getTableName('student_entity_store');
+
+        // Insert new associations without deleting previous records
+        foreach ($storeIds as $storeId) {
+            $connection->insertOnDuplicate(
+                $tableName,
+                ['student_id' => (int)$studentId, 'store_id' => (int)$storeId]
+            );
+        }
     }
 }

@@ -57,7 +57,7 @@ class StudentRepository implements StudentRepositoryInterface
         $this->hydrator = $hydrator ?? ObjectManager::getInstance()->get(HydratorInterface::class);
     }
 
-    public function save(StudentInterface $student): StudentInterface
+    public function save(StudentInterface $student, $saveStoreAssociations = true): StudentInterface
     {
         try {
             if (empty($student->getStoreId())) {
@@ -68,8 +68,12 @@ class StudentRepository implements StudentRepositoryInterface
                 $existingStudent = $this->getById($student->getId());
                 $student = $this->hydrator->hydrate($existingStudent, $this->hydrator->extract($student));
             }
+
             $this->resource->save($student);
 
+            if ($saveStoreAssociations) {
+                $this->saveStoreAssociations($student);
+            }
 
         } catch (\Exception $e) {
             throw new CouldNotSaveException(
@@ -80,6 +84,25 @@ class StudentRepository implements StudentRepositoryInterface
         return $student;
     }
 
+    protected function saveStoreAssociations(StudentInterface $student)
+    {
+        $connection = $this->resource->getConnection();
+        $table = $this->resource->getTable('student_entity_store');
+
+        $studentId = (int)$student->getId();
+        $storeIds = (array)$student->getStoreId();
+
+        // Delete existing associations
+        $connection->delete($table, ['student_id = ?' => $studentId]);
+
+        // Insert new store associations
+        foreach ($storeIds as $storeId) {
+            $connection->insert($table, [
+                'student_id' => $studentId,
+                'store_id' => (int)$storeId,
+            ]);
+        }
+    }
 
     public function getById($studentId): ?StudentInterface
     {

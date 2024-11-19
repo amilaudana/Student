@@ -1,10 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
-/**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
- */
--->
 <listing xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Ui:etc/ui_configuration.xsd">
     <argument name="data" xsi:type="array">
         <item name="js_config" xsi:type="array">
@@ -14,7 +8,7 @@
     <settings>
         <buttons>
             <button name="add">
-                <url path="student/student/new"/>
+                <url path="*/*/new"/>
                 <class>primary</class>
                 <label translate="true">Add New Student</label>
             </button>
@@ -74,7 +68,7 @@
                 <settings>
                     <callback>
                         <target>editSelected</target>
-                        <provider>student_listing.student_listing.student_columns_editor</provider>
+                        <provider>student_listing.student_listing.student_columns.ids</provider>
                     </callback>
                     <type>edit</type>
                     <label translate="true">Edit</label>
@@ -171,11 +165,16 @@
             </settings>
         </column>
 
-        <actionsColumn name="actions" class="CodeAesthetix\Student\Ui\Component\Listing\Column\Actions">
-            <settings>
-                <indexField>student_id</indexField>
-            </settings>
-        </actionsColumn>
+        <column name="actions" class="CodeAesthetix\Student\Ui\Component\Listing\Column\Actions">
+            <argument name="data" xsi:type="array">
+                <item name="config" xsi:type="array">
+                    <item name="label" xsi:type="string" translate="true">Actions</item>
+                    <item name="sortable" xsi:type="boolean">false</item>
+                    <item name="component" xsi:type="string">Magento_Ui/js/grid/columns/actions</item>
+                </item>
+            </argument>
+        </column>
+
 
     </columns>
 </listing>

@@ -18,30 +18,10 @@ use Magento\Store\Model\StoreManagerInterface;
  */
 class Student extends AbstractDb
 {
-    /**
-     * Store manager
-     *
-     * @var StoreManagerInterface
-     */
     protected $storeManager;
-
-    /**
-     * @var EntityManager
-     */
     protected $entityManager;
-
-    /**
-     * @var MetadataPool
-     */
     protected $metadataPool;
 
-    /**
-     * @param Context $context
-     * @param StoreManagerInterface $storeManager
-     * @param EntityManager $entityManager
-     * @param MetadataPool $metadataPool
-     * @param string|null $connectionName
-     */
     public function __construct(
         Context $context,
         StoreManagerInterface $storeManager,
@@ -55,47 +35,35 @@ class Student extends AbstractDb
         parent::__construct($context, $connectionName);
     }
 
-    /**
-     * Initialize resource model
-     *
-     * @return void
-     */
     protected function _construct()
     {
         $this->_init('student_entity', 'student_id');
     }
 
-    /**
-     * @inheritDoc
-     */
     public function getConnection()
     {
         return $this->metadataPool->getMetadata(StudentInterface::class)->getEntityConnection();
     }
 
-    /**
-     * Perform operations before object save
-     *
-     * @param AbstractModel $object
-     * @return $this
-     * @throws LocalizedException
-     */
     protected function _beforeSave(AbstractModel $object)
     {
         // Add any pre-save validation logic if needed
         return $this;
     }
 
-    /**
-     * Get student id.
-     *
-     * @param AbstractModel $object
-     * @param mixed $value
-     * @param string|null $field
-     * @return bool|int|string
-     * @throws LocalizedException
-     * @throws \Exception
-     */
+    public function load(AbstractModel $object, $value, $field = null)
+    {
+        $studentId = $this->getStudentId($object, $value, $field);
+        if ($studentId) {
+            $this->entityManager->load($object, $studentId);
+
+            // Load store associations
+            $storeIds = $this->lookupStoreIds($studentId);
+            $object->setData('store_id', $storeIds);
+        }
+        return $this;
+    }
+
     private function getStudentId(AbstractModel $object, $value, $field = null)
     {
         $entityMetadata = $this->metadataPool->getMetadata(StudentInterface::class);
@@ -116,31 +84,6 @@ class Student extends AbstractDb
         return $entityId;
     }
 
-    /**
-     * Load an object
-     *
-     * @param AbstractModel $object
-     * @param mixed $value
-     * @param string $field field to load by (defaults to model id)
-     * @return $this
-     */
-    public function load(AbstractModel $object, $value, $field = null)
-    {
-        $studentId = $this->getStudentId($object, $value, $field);
-        if ($studentId) {
-            $this->entityManager->load($object, $studentId);
-        }
-        return $this;
-    }
-
-    /**
-     * Retrieve select object for load object data
-     *
-     * @param string $field
-     * @param mixed $value
-     * @param AbstractModel $object
-     * @return Select
-     */
     protected function _getLoadSelect($field, $value, $object)
     {
         $entityMetadata = $this->metadataPool->getMetadata(StudentInterface::class);
@@ -165,12 +108,6 @@ class Student extends AbstractDb
         return $select;
     }
 
-    /**
-     * Get store ids to which specified item is assigned
-     *
-     * @param int $id
-     * @return array
-     */
     public function lookupStoreIds($id)
     {
         $connection = $this->getConnection();
@@ -189,26 +126,4 @@ class Student extends AbstractDb
 
         return $connection->fetchCol($select, ['student_id' => (int)$id]);
     }
-
-    /**
-     * Save an object.
-     *
-     * @param AbstractModel $object
-     * @return $this
-     * @throws \Exception
-     */
-    public function save(AbstractModel $object)
-    {
-        $this->entityManager->save($object);
-        return $this;
-    }
-
-    /**
-     * @inheritDoc
-     */
-//    public function delete(AbstractModel $object)
-//    {
-//        $this->entityManager->delete($object);
-//        return $this;
-//    }
 }
