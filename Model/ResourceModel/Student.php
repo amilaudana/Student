@@ -126,5 +126,5 @@ class Student extends AbstractDb
 
         return $connection->fetchCol($select, ['student_id' => (int)$id]);
     }
- 
+
 }

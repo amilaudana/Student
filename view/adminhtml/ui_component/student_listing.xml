@@ -138,6 +138,9 @@
         <column name="age">
             <settings>
                 <filter>number</filter>
+                <editor>
+                    <editorType>text</editorType>
+                </editor>
                 <label translate="true">Age</label>
             </settings>
         </column>

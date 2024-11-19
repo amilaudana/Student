@@ -57,6 +57,10 @@ class StudentRepository implements StudentRepositoryInterface
         $this->hydrator = $hydrator ?? ObjectManager::getInstance()->get(HydratorInterface::class);
     }
 
+    /**
+     * @throws NoSuchEntityException
+     * @throws CouldNotSaveException
+     */
     public function save(StudentInterface $student): StudentInterface
     {
         if (empty($student->getStoreId())) {
@@ -69,6 +73,7 @@ class StudentRepository implements StudentRepositoryInterface
 
         try {
             $this->resource->save($student);
+            $this->saveStoreAssociations($student);
         } catch (\Exception $exception) {
             throw new CouldNotSaveException(__($exception->getMessage()));
         }
