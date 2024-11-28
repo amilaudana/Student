@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
@@ -6,6 +9,9 @@
 namespace CodeAesthetix\Student\Controller\Adminhtml\Student;
 
 use Magento\Framework\App\Action\HttpGetActionInterface;
+use Magento\Backend\App\Action\Context;
+use Magento\Backend\Model\View\Result\ForwardFactory;
+use Magento\Framework\Controller\ResultInterface;
 
 /**
  * Create Student action.
@@ -13,19 +19,17 @@ use Magento\Framework\App\Action\HttpGetActionInterface;
 class NewAction extends \Magento\Backend\App\Action implements HttpGetActionInterface
 {
     /**
-     * @var \Magento\Backend\Model\View\Result\ForwardFactory
+     * @var ForwardFactory
      */
-    protected $resultForwardFactory;
+    protected ForwardFactory $resultForwardFactory;
 
     /**
-     * @param \Magento\Backend\App\Action\Context $context
-     * @param \Magento\Framework\Registry $coreRegistry
-     * @param \Magento\Backend\Model\View\Result\ForwardFactory $resultForwardFactory
+     * @param Context $context
+     * @param ForwardFactory $resultForwardFactory
      */
     public function __construct(
-        \Magento\Backend\App\Action\Context $context,
-        \Magento\Framework\Registry $coreRegistry,
-        \Magento\Backend\Model\View\Result\ForwardFactory $resultForwardFactory
+        Context $context,
+        ForwardFactory $resultForwardFactory
     ) {
         $this->resultForwardFactory = $resultForwardFactory;
         parent::__construct($context);
@@ -34,9 +38,9 @@ class NewAction extends \Magento\Backend\App\Action implements HttpGetActionInte
     /**
      * Create new Student entity
      *
-     * @return \Magento\Framework\Controller\ResultInterface
+     * @return ResultInterface
      */
-    public function execute()
+    public function execute(): ResultInterface
     {
         /** @var \Magento\Framework\Controller\Result\Forward $resultForward */
         $resultForward = $this->resultForwardFactory->create();

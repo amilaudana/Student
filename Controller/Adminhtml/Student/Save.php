@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace CodeAesthetix\Student\Controller\Adminhtml\Student;
 
 use Magento\Framework\App\Action\HttpPostActionInterface;
@@ -19,17 +21,17 @@ class Save extends Action implements HttpPostActionInterface
     /**
      * @var DataPersistorInterface
      */
-    protected $dataPersistor;
+    protected DataPersistorInterface $dataPersistor;
 
     /**
      * @var StudentFactory
      */
-    private $studentFactory;
+    private StudentFactory $studentFactory;
 
     /**
      * @var StudentRepositoryInterface
      */
-    private $studentRepository;
+    private StudentRepositoryInterface $studentRepository;
 
     /**
      * @param Context $context
@@ -54,7 +56,7 @@ class Save extends Action implements HttpPostActionInterface
      *
      * @return ResultInterface
      */
-    public function execute()
+    public function execute(): ResultInterface
     {
         /** @var \Magento\Backend\Model\View\Result\Redirect $resultRedirect */
         $resultRedirect = $this->resultRedirectFactory->create();
@@ -68,7 +70,7 @@ class Save extends Action implements HttpPostActionInterface
             /** @var \CodeAesthetix\Student\Model\Student $student */
             $student = $this->studentFactory->create();
 
-            $id = $this->getRequest()->getParam('student_id');
+            $id = (int) $this->getRequest()->getParam('student_id');
             if ($id) {
                 try {
                     $student = $this->studentRepository->getById($id);
@@ -97,7 +99,6 @@ class Save extends Action implements HttpPostActionInterface
         return $resultRedirect->setPath('*/*/');
     }
 
-
     /**
      * Process and set the student return
      *
@@ -106,7 +107,7 @@ class Save extends Action implements HttpPostActionInterface
      * @param ResultInterface $resultRedirect
      * @return ResultInterface
      */
-    private function processStudentReturn($student, $data, $resultRedirect)
+    private function processStudentReturn(\CodeAesthetix\Student\Model\Student $student, array $data, ResultInterface $resultRedirect): ResultInterface
     {
         $redirect = $data['back'] ?? 'close';
 

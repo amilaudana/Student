@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
@@ -8,8 +11,10 @@ namespace CodeAesthetix\Student\Controller\Adminhtml\Student;
 use Magento\Backend\App\Action\Context;
 use CodeAesthetix\Student\Api\StudentRepositoryInterface as StudentRepository;
 use Magento\Framework\Controller\Result\JsonFactory;
-use CodeAesthetix\Student\Api\Data\StudentInterface;
 use Magento\Framework\App\Action\HttpPostActionInterface;
+use Magento\Framework\Controller\ResultInterface;
+use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\Controller\Result\Json;
 
 class InlineEdit extends \Magento\Backend\App\Action implements HttpPostActionInterface
 {
@@ -21,14 +26,14 @@ class InlineEdit extends \Magento\Backend\App\Action implements HttpPostActionIn
     const ADMIN_RESOURCE = 'CodeAesthetix_Student::student';
 
     /**
-     * @var \CodeAesthetix\Student\Api\StudentRepositoryInterface
+     * @var StudentRepository
      */
-    protected $studentRepository;
+    protected StudentRepository $studentRepository;
 
     /**
-     * @var \Magento\Framework\Controller\Result\JsonFactory
+     * @var JsonFactory
      */
-    protected $jsonFactory;
+    protected JsonFactory $jsonFactory;
 
     /**
      * @param Context $context
@@ -48,12 +53,12 @@ class InlineEdit extends \Magento\Backend\App\Action implements HttpPostActionIn
     /**
      * Execute action for inline editing
      *
-     * @return \Magento\Framework\Controller\ResultInterface
-     * @throws \Magento\Framework\Exception\LocalizedException
+     * @return ResultInterface
+     * @throws LocalizedException
      */
-    public function execute()
+    public function execute(): ResultInterface
     {
-        /** @var \Magento\Framework\Controller\Result\Json $resultJson */
+        /** @var Json $resultJson */
         $resultJson = $this->jsonFactory->create();
         $error = false;
         $messages = [];
@@ -68,14 +73,14 @@ class InlineEdit extends \Magento\Backend\App\Action implements HttpPostActionIn
                 foreach (array_keys($postItems) as $studentId) {
                     try {
                         // Load student entity by ID
-                        $studentEntity = $this->studentRepository->getById($studentId);
+                        $studentEntity = $this->studentRepository->getById((int)$studentId);
 
                         $studentEntity->setData(array_merge($studentEntity->getData(), $postItems[$studentId]));
 
                         // Save the updated student entity
                         $this->studentRepository->save($studentEntity);
                     } catch (\Exception $e) {
-                        $messages[] = $this->getErrorWithStudentId($studentId, $e->getMessage());
+                        $messages[] = $this->getErrorWithStudentId((int)$studentId, $e->getMessage());
                         $error = true;
                     }
                 }
@@ -95,7 +100,7 @@ class InlineEdit extends \Magento\Backend\App\Action implements HttpPostActionIn
      * @param string $errorText
      * @return string
      */
-    protected function getErrorWithStudentId($studentId, $errorText)
+    protected function getErrorWithStudentId(int $studentId, string $errorText): string
     {
         return '[Student ID: ' . $studentId . '] ' . $errorText;
     }

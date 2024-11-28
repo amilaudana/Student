@@ -1,5 +1,13 @@
-# Student Module
-## CodeAesthetix Student Module
+<h1 align="center">Student Module</h1>
+<div align="center" dir="auto">
+<img alt="GitHub License" src="https://img.shields.io/github/license/amilaudana/student"> 
+<img src="https://img.shields.io/badge/magento-2-blue.svg?logo=magento&longCache=true" alt="Magento 2 Supported Version">
+</div>
+<h2 align="center">CodeAesthetix Student Module</h2>  
+<div align="center" dir="auto">
+<img src="https://img.shields.io/badge/student-1.0.0-blue.svg?logo=magento&longCache=false&style=for-the-badge" alt="Magento 2 Supported Version">
+</div>
+
 ### Overview
 The CodeAesthetix Student module is a custom Magento 2 module designed to manage student records within the Magento Admin Panel. It provides administrators with tools to add, update, delete, and associate students with specific stores, leveraging Magento 2's best practices such as Service Contracts, UI Components, and Dependency Injection.
 

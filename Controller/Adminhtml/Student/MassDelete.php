@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  *
  * Copyright © Magento, Inc. All rights reserved.
@@ -10,9 +13,10 @@ use Magento\Framework\App\Action\HttpPostActionInterface;
 use Magento\Framework\Controller\ResultFactory;
 use Magento\Backend\App\Action\Context;
 use Magento\Ui\Component\MassAction\Filter;
-
 use CodeAesthetix\Student\Model\ResourceModel\Student\CollectionFactory;
 use CodeAesthetix\Student\Api\StudentRepositoryInterface;
+use Magento\Backend\Model\View\Result\Redirect;
+use Magento\Framework\Exception\LocalizedException;
 
 /**
  * Class MassDelete
@@ -29,30 +33,30 @@ class MassDelete extends \Magento\Backend\App\Action implements HttpPostActionIn
     /**
      * @var Filter
      */
-    protected $filter;
+    protected Filter $filter;
 
     /**
      * @var CollectionFactory
      */
-    protected $collectionFactory;
+    protected CollectionFactory $collectionFactory;
 
     /**
      * @var StudentRepositoryInterface
      */
-    protected $studentRepository;
+    protected StudentRepositoryInterface $studentRepository;
 
     /**
      * @param Context $context
      * @param Filter $filter
      * @param CollectionFactory $collectionFactory
+     * @param StudentRepositoryInterface $studentRepository
      */
     public function __construct(
         Context $context,
         Filter $filter,
         CollectionFactory $collectionFactory,
         StudentRepositoryInterface $studentRepository
-    )
-    {
+    ) {
         $this->filter = $filter;
         $this->collectionFactory = $collectionFactory;
         $this->studentRepository = $studentRepository;
@@ -62,24 +66,23 @@ class MassDelete extends \Magento\Backend\App\Action implements HttpPostActionIn
     /**
      * Execute action
      *
-     * @return \Magento\Backend\Model\View\Result\Redirect
-     * @throws \Magento\Framework\Exception\LocalizedException|\Exception
+     * @return Redirect
+     * @throws LocalizedException|\Exception
      */
-    public function execute()
+    public function execute(): Redirect
     {
         $collection = $this->filter->getCollection($this->collectionFactory->create());
         $collectionSize = $collection->getSize();
 
         foreach ($collection as $student) {
             try {
- 
                 // Load student by ID before deleting to ensure it's fully loaded
-                $studentEntity = $this->studentRepository->getById($student->getId());
+                $studentEntity = $this->studentRepository->getById((int)$student->getId());
 
                 if ($studentEntity->getId()) {
                     $this->studentRepository->delete($studentEntity);
                 } else {
-                    throw new \Exception(__('Student entity with ID %1 not found.', $student->getId()));
+                    throw new \Exception((string)__('Student entity with ID %1 not found.', $student->getId()));
                 }
             } catch (\Exception $e) {
                 $this->messageManager->addErrorMessage(
@@ -92,11 +95,8 @@ class MassDelete extends \Magento\Backend\App\Action implements HttpPostActionIn
             $this->messageManager->addSuccessMessage(__('A total of %1 record(s) have been deleted.', $collectionSize));
         }
 
-        /** @var \Magento\Backend\Model\View\Result\Redirect $resultRedirect */
+        /** @var Redirect $resultRedirect */
         $resultRedirect = $this->resultFactory->create(ResultFactory::TYPE_REDIRECT);
         return $resultRedirect->setPath('*/*/');
     }
-
-
-
 }

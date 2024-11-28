@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 namespace CodeAesthetix\Student\Controller\Adminhtml\Student;
 
 use Magento\Backend\App\Action;
@@ -6,12 +9,31 @@ use Magento\Framework\App\Action\HttpGetActionInterface;
 use Magento\Framework\View\Result\PageFactory;
 use Magento\Framework\Registry;
 use CodeAesthetix\Student\Model\StudentFactory;
+use Magento\Framework\Controller\ResultInterface;
 
 class Edit extends \CodeAesthetix\Student\Controller\Adminhtml\Student implements HttpGetActionInterface
 {
-    protected $resultPageFactory;
-    protected $studentFactory;
+    /**
+     * @var PageFactory
+     */
+    protected PageFactory $resultPageFactory;
 
+    /**
+     * @var StudentFactory
+     */
+    protected StudentFactory $studentFactory;
+
+    /**
+     * @var Registry
+     */
+    protected $coreRegistry;
+
+    /**
+     * @param Action\Context $context
+     * @param PageFactory $resultPageFactory
+     * @param Registry $coreRegistry
+     * @param StudentFactory $studentFactory
+     */
     public function __construct(
         Action\Context $context,
         PageFactory $resultPageFactory,
@@ -19,14 +41,19 @@ class Edit extends \CodeAesthetix\Student\Controller\Adminhtml\Student implement
         StudentFactory $studentFactory
     ) {
         $this->resultPageFactory = $resultPageFactory;
-        $this->_coreRegistry = $coreRegistry;
+        $this->coreRegistry = $coreRegistry;
         $this->studentFactory = $studentFactory;
         parent::__construct($context, $coreRegistry);
     }
 
-    public function execute()
+    /**
+     * Execute action
+     *
+     * @return ResultInterface
+     */
+    public function execute(): ResultInterface
     {
-        $id = $this->getRequest()->getParam('student_id');
+        $id = (int)$this->getRequest()->getParam('student_id');
         $model = $this->studentFactory->create();
 
         if ($id) {
@@ -38,7 +65,7 @@ class Edit extends \CodeAesthetix\Student\Controller\Adminhtml\Student implement
             }
         }
 
-        $this->_coreRegistry->register('student', $model);
+        $this->coreRegistry->register('student', $model);
 
         $resultPage = $this->resultPageFactory->create();
         $this->initPage($resultPage)->addBreadcrumb(
@@ -53,7 +80,12 @@ class Edit extends \CodeAesthetix\Student\Controller\Adminhtml\Student implement
         return $resultPage;
     }
 
-    protected function _isAllowed()
+    /**
+     * Check if the user is allowed to access this controller
+     *
+     * @return bool
+     */
+    protected function _isAllowed(): bool
     {
         return $this->_authorization->isAllowed('CodeAesthetix_Student::student');
     }
