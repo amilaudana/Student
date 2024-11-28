@@ -4,7 +4,7 @@
         <resources>
             <resource id="Magento_Backend::admin">
                 <resource id="CodeAesthetix_Student::menu" title="CodeAesthetix Students Management" translate="title" sortOrder="200">
-                    <resource id="CodeAesthetix_Student::students" title="Student List" translate="title" />
+                    <resource id="CodeAesthetix_Student::students" title="Students List" translate="title" sortOrder="10"/>
                 </resource>
             </resource>
         </resources>
