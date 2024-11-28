@@ -64,7 +64,7 @@ class StudentRepository implements StudentRepositoryInterface
     public function save(StudentInterface $student): StudentInterface
     {
         if (empty($student->getStoreId())) {
-            $student->setStoreId([$this->storeManager->getStore()->getId()]);
+            $student->setStoreId([0]);
         }
 
         if ($student->getId() && $student instanceof Student && !$student->getOrigData()) {
@@ -79,6 +79,7 @@ class StudentRepository implements StudentRepositoryInterface
         }
         return $student;
     }
+
 
     protected function saveStoreAssociations(StudentInterface $student)
     {
@@ -124,9 +125,15 @@ class StudentRepository implements StudentRepositoryInterface
 
     public function deleteById($studentId): bool
     {
-        $student = $this->getById($studentId);
-        return $this->delete($student);
+        try {
+            $student = $this->getById($studentId);
+            return $this->delete($student);
+        } catch (NoSuchEntityException $e) {
+            // Log the message or handle the error as needed, and rethrow
+            throw new CouldNotDeleteException(__('Could not delete the student: %1', $e->getMessage()));
+        }
     }
+
 
     public function getList(SearchCriteriaInterface $criteria)
     {
