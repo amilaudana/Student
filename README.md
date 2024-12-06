@@ -29,7 +29,7 @@ Clone the Repository:
 Clone the repository into the app/code/CodeAesthetix/Student directory:
 
 ```
-git clone <repository-url> app/code/CodeAesthetix/Student
+git clone https://github.com/amilaudana/Student.git app/code/CodeAesthetix/Student
 ```
 Enable the Module:
 Run the following Magento commands to enable the module:
